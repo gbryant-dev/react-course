@@ -7,7 +7,10 @@ class Orders extends Component {
 
     componentDidMount() {}
     
-    render() {}
+    render() {
+
+      return
+    }
 }
 
 export default Orders;
