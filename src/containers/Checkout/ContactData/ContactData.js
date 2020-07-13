@@ -10,22 +10,28 @@ class ContactData extends Component {
     state = {
         orderForm: {
             customer: {
-            name: {elementType: 'input', elementConfig: { type: 'text', placeholder: 'Your Name' }, value: ''},
-            email: {elementType: 'input', elementConfig: { type: 'text', placeholder: 'Your Email' }, value: ''},
-            address: {elementType: 'input', elementConfig: { type: 'text', placeholder: 'Your Address' }, value: ''},
-            deliveryMethod: {elementType: 'select', elementConfig: { options: [{value: 'fastest', displayValue: 'Fastest'}, {value: 'cheapest', displayValue: 'Cheapest'}] }, value: ''}
+            name: {elementType: 'input', elementConfig: { type: 'text', placeholder: 'Your Name' }, value: '', validation: {required: true}, valid: false, touched: false},
+            email: {elementType: 'input', elementConfig: { type: 'text', placeholder: 'Your Email' }, value: '', validation: {required: true}, valid: false, touched: false},
+            address: {elementType: 'input', elementConfig: { type: 'text', placeholder: 'Your Address' }, value: '', validation: {required: true}, valid: false, touched: false},
+            deliveryMethod: {elementType: 'select', elementConfig: { options: [{value: 'fastest', displayValue: 'Fastest'}, {value: 'cheapest', displayValue: 'Cheapest'}] }, value: 'fastest', validation: {}, valid: true}
             }
         },
+        formIsValid: false,
         loading: false
     }
 
     orderHandler = (event) => {
         event.preventDefault();
         this.setState({loading: true});
+        const formData = {};
+        for (const formEl in this.state.orderForm.customer) {
+            formData[formEl] = this.state.orderForm.customer[formEl].value;
+        }
 
         const order = {
             ingredients: this.props.ingredients,
             price: this.props.price,
+            orderData: formData
         };
 
         axios.post('orders.json', order).then(
@@ -37,6 +43,46 @@ class ContactData extends Component {
             this.setState({loading: false});
         });
 
+    }
+
+    checkValidity(value, rules) {
+        let isValid = true;
+
+        if (rules.required) {
+            isValid = value.trim() !== '' && isValid;
+        }
+
+        return isValid;
+
+    }
+
+    inputChangedHandler = (event, inputIdentifier) => {
+
+        const updatedOrderForm = {
+            ...this.state.orderForm.customer
+        }
+
+        const updatedFormElement = {
+            ...updatedOrderForm[inputIdentifier] 
+        }
+
+
+        updatedFormElement.value = event.target.value;
+        updatedFormElement.touched = true;
+
+        updatedFormElement.valid = this.checkValidity(event.target.value, updatedFormElement.validation);
+
+        updatedOrderForm[inputIdentifier] = updatedFormElement;
+        
+        let formIsValid = true;
+
+        for (let input in updatedOrderForm) {
+            formIsValid = updatedOrderForm[input].valid && formIsValid;
+        }
+
+        console.log(formIsValid);
+
+        this.setState({orderForm: {customer: updatedOrderForm}, formIsValid: formIsValid});
     }
 
     render() {
@@ -51,11 +97,20 @@ class ContactData extends Component {
         }
 
         let form = (
-            <form>
+            <form onSubmit={this.orderHandler}>
                 {formElements.map(el => (
-                    <Input key={el.id} elementType={el.config.elementType} elementConfig={el.config.elementConfig} value={el.config.value} />
+                    <Input 
+                        changed={(event) => this.inputChangedHandler(event, el.id)} 
+                        key={el.id} 
+                        elementType={el.config.elementType} 
+                        elementConfig={el.config.elementConfig} 
+                        value={el.config.value}
+                        invalid={!el.config.valid}
+                        shouldValidate={el.config.validation}
+                        touched={el.config.touched}
+                    />
                 ))}
-                <Button clicked={this.orderHandler} type="Success">ORDER</Button>
+                <Button clicked={this.orderHandler} type="Success" disabled={!this.state.formIsValid}>ORDER</Button>
             </form>
         );
 
