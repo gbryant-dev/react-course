@@ -6,6 +6,7 @@ import styles from './Auth.module.css';
 import * as actions from '../../store/actions/index';
 import Spinner from '../../components/UI/Spinner/Spinner';
 import { Redirect } from 'react-router-dom';
+import { updateObject, checkValidity } from '../../shared/utility';
 
 class Auth extends Component {
 
@@ -43,38 +44,22 @@ class Auth extends Component {
     }
   }
 
-  checkValidity(value, rules) {
-    let isValid = true;
-
-    if (rules.required) {
-        isValid = value.trim() !== '' && isValid;
-    }
-
-    if (rules.minLength) {
-      isValid = value.length >= rules.minLength && isValid;
-    }
-
-    return isValid;
-
-  }
-
   inputChangedHandler = (event, controlName) => {
-    const updatedControls = {
-      ...this.state.controls,
-      [controlName] : {
-        ...this.state.controls[controlName],
+
+    const updatedControls = updateObject(this.state.controls, {
+      [controlName] : updateObject(this.state.controls[controlName], {
         value: event.target.value,
-        valid: this.checkValidity(event.target.value, this.state.controls[controlName].validation),
+        valid: checkValidity(event.target.value, this.state.controls[controlName].validation),
         touched: true
-      }
-    }
+      })
+    });
+
     this.setState({controls: updatedControls});
   }
 
   submitHandler = event => {
     event.preventDefault();
     const { email : { value: email }, password : { value: password } } = this.state.controls;
-    console.log(email, password);
     this.props.onAuth(email, password, this.state.isSignUp);
   }
 

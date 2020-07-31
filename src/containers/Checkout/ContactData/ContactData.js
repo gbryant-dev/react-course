@@ -7,6 +7,7 @@ import axios from '../../../axios-orders';
 import Input from '../../../components/UI/Input/Input';
 import withErrorHandler from '../../../hoc/withErrorHandler/withErrorHandler';
 import * as actions from '../../../store/actions/index';
+import { updateObject, checkValidity } from '../../../shared/utility';
 
 
 class ContactData extends Component {
@@ -41,34 +42,17 @@ class ContactData extends Component {
 
     }
 
-    checkValidity(value, rules) {
-        let isValid = true;
-
-        if (rules.required) {
-            isValid = value.trim() !== '' && isValid;
-        }
-
-        return isValid;
-
-    }
-
     inputChangedHandler = (event, inputIdentifier) => {
 
-        const updatedOrderForm = {
-            ...this.state.orderForm.customer
-        }
+        const updatedFormElement = updateObject(this.state.orderForm.customer[inputIdentifier], {
+            value: event.target.value,
+            touched: true,
+            valid: checkValidity(event.target.value, this.state.orderForm.customer[inputIdentifier].validation)
+        });
 
-        const updatedFormElement = {
-            ...updatedOrderForm[inputIdentifier] 
-        }
-
-
-        updatedFormElement.value = event.target.value;
-        updatedFormElement.touched = true;
-
-        updatedFormElement.valid = this.checkValidity(event.target.value, updatedFormElement.validation);
-
-        updatedOrderForm[inputIdentifier] = updatedFormElement;
+        const updatedOrderForm = updateObject(this.state.orderForm.customer, {
+            [inputIdentifier]: updatedFormElement 
+        });
         
         let formIsValid = true;
 
