@@ -9,16 +9,14 @@ const asyncComponent = ImportComponent => {
         componentDidMount() {
             ImportComponent()
             .then(cmp => {
-                console.log('Getting async component', cmp);
                 this.setState({component: cmp.default})
             });
         }
 
         render() {
-            const C = this.state.component
+            const C = this.state.component;
             return C ? <C {...this.props} /> : null;
         }
-        
     }
 }
 
